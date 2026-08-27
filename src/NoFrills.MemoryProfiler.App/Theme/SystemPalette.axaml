@@ -1,0 +1,34 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!--
+    What is left when the profiler's own look is switched off: the system decides the colours, and
+    only the meanings the interface cannot do without are stated.
+
+    The state colours stay, because they carry information rather than decoration - a holder worth
+    investigating has to look different from one that is expected, whatever the desktop theme is.
+    They are chosen to read on a light and on a dark background alike, since the system variant may
+    be either.
+  -->
+
+  <Style Selector="Border.panel">
+    <Setter Property="BorderBrush" Value="#40808080" />
+  </Style>
+
+  <Style Selector="TextBlock.suspect">
+    <Setter Property="Foreground" Value="#D13438" />
+  </Style>
+
+  <Style Selector="TextBlock.expected">
+    <Setter Property="Opacity" Value="0.7" />
+  </Style>
+
+  <Style Selector="TextBlock.warning">
+    <Setter Property="Foreground" Value="#B85C00" />
+  </Style>
+
+  <!-- The selection is painted by the system theme, so the state colours give way to its text. -->
+  <Style Selector="DataGridRow:selected TextBlock.suspect">
+    <Setter Property="Foreground" Value="{Binding $parent[DataGridRow].Foreground}" />
+  </Style>
+</Styles>

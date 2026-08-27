@@ -1,0 +1,25 @@
+﻿<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="NoFrills.MemoryProfiler.App.App">
+  <!--
+    The look is added in Initialize rather than here: which of the two style sheets applies is a
+    setting, and the theme variant follows it. See App.axaml.cs.
+  -->
+
+  <Application.Styles>
+    <FluentTheme />
+    <!-- The DataGrid ships its own theme, which is not part of the Fluent theme. -->
+    <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+
+    <!-- What both looks share: these say what a thing is, not what colour it has. -->
+    <Style Selector="TextBlock.header">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,8,0,4" />
+    </Style>
+
+    <Style Selector="TextBlock.meta">
+      <Setter Property="Opacity" Value="0.75" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+  </Application.Styles>
+</Application>

@@ -1,0 +1,68 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .body { fill: #6b5c56; }
+      .belly { fill: #8a7a72; }
+      .dirt { fill: #4a3f3a; }
+      .accent { fill: #4fae7a; }
+      .dark { fill: #2e2622; }
+      .dotnet { fill: #512bd4; }
+    </style>
+  </defs>
+
+  <!-- ground -->
+  <rect x="0" y="300" width="400" height="100" class="dirt"/>
+
+  <!-- memory bar mound, dirt piles styled as a bar chart -->
+  <rect x="60" y="270" width="18" height="30" class="accent" opacity="0.85"/>
+  <rect x="84" y="250" width="18" height="50" class="accent" opacity="0.85"/>
+  <rect x="298" y="260" width="18" height="40" class="accent" opacity="0.6"/>
+  <rect x="322" y="280" width="18" height="20" class="accent" opacity="0.6"/>
+
+  <!-- soft shadow at ground level -->
+  <ellipse cx="200" cy="300" rx="95" ry="30" class="dirt" opacity="0.5"/>
+
+  <!-- body emerging from the ground -->
+  <path d="M 130 300
+           C 130 210, 155 150, 200 150
+           C 245 150, 270 210, 270 300
+           Z" class="body"/>
+
+  <!-- belly patch -->
+  <path d="M 168 300
+           C 168 235, 180 195, 200 195
+           C 220 195, 232 235, 232 300
+           Z" class="belly"/>
+
+  <!-- ears -->
+  <ellipse cx="150" cy="165" rx="14" ry="16" class="body"/>
+  <ellipse cx="250" cy="165" rx="14" ry="16" class="body"/>
+
+  <!-- snout -->
+  <ellipse cx="200" cy="215" rx="26" ry="18" class="body"/>
+  <ellipse cx="200" cy="220" rx="10" ry="7" class="dark"/>
+
+  <!-- eyes, plain neutral lines, no-frills expression -->
+  <line x1="168" y1="180" x2="182" y2="180" stroke="#2e2622" stroke-width="4" stroke-linecap="round"/>
+  <line x1="218" y1="180" x2="232" y2="180" stroke="#2e2622" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- whiskers -->
+  <line x1="176" y1="222" x2="150" y2="216" stroke="#2e2622" stroke-width="2" stroke-linecap="round"/>
+  <line x1="176" y1="228" x2="150" y2="230" stroke="#2e2622" stroke-width="2" stroke-linecap="round"/>
+  <line x1="224" y1="222" x2="250" y2="216" stroke="#2e2622" stroke-width="2" stroke-linecap="round"/>
+  <line x1="224" y1="228" x2="250" y2="230" stroke="#2e2622" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- front paws -->
+  <ellipse cx="165" cy="298" rx="20" ry="12" class="body"/>
+  <ellipse cx="235" cy="298" rx="20" ry="12" class="body"/>
+  <line x1="155" y1="298" x2="155" y2="304" stroke="#2e2622" stroke-width="2"/>
+  <line x1="165" y1="300" x2="165" y2="306" stroke="#2e2622" stroke-width="2"/>
+  <line x1="175" y1="298" x2="175" y2="304" stroke="#2e2622" stroke-width="2"/>
+  <line x1="225" y1="298" x2="225" y2="304" stroke="#2e2622" stroke-width="2"/>
+  <line x1="235" y1="300" x2="235" y2="306" stroke="#2e2622" stroke-width="2"/>
+  <line x1="245" y1="298" x2="245" y2="304" stroke="#2e2622" stroke-width="2"/>
+
+  <!-- .NET tech badge, small corner chip, detailed icon only -->
+  <circle cx="330" cy="330" r="42" class="dotnet"/>
+  <text x="330" y="343" text-anchor="middle" font-family="Consolas, monospace" font-weight="700" font-size="28" fill="#ffffff">C#</text>
+</svg>

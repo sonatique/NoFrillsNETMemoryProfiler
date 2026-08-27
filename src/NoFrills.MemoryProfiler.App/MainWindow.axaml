@@ -1,0 +1,359 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:NoFrills.MemoryProfiler.App.ViewModels"
+        xmlns:controls="using:NoFrills.MemoryProfiler.App.Controls"
+        x:Class="NoFrills.MemoryProfiler.App.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="No Frills .NET Memory Profiler"
+        Icon="/Assets/icon-32.png"
+        Width="1500" Height="950">
+
+  <Window.Styles>
+    <!-- The classes are declared once, in App.axaml, so both looks style the same things. -->
+  </Window.Styles>
+
+  <DockPanel LastChildFill="True">
+
+    <!-- Toolbar -->
+    <Border DockPanel.Dock="Top" Padding="8" Classes="panel" BorderThickness="0,0,0,1">
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Button Name="OpenButton" Content="Open dump..." />
+        <Button Name="CompareButton" Content="Compare with..." />
+        <Separator Width="1" Margin="4,0" />
+        <Button Name="ExportButton" Content="Export report..." Command="{Binding ExportReportCommand}" />
+        <Separator Width="1" Margin="4,0" />
+        <Button Content="Holder rules..." Command="{Binding EditHolderRulesCommand}"
+                ToolTip.Tip="Name your own pools, caches and rings, so what they hold is labelled instead of reported as a leak." />
+        <Button Content="Reload rules" Command="{Binding ReloadHolderRulesCommand}"
+                ToolTip.Tip="Re-reads the rule file, so an edit applies to the next analysis without restarting."
+                ToolTip.Placement="Bottom" />
+        <Separator Width="1" Margin="4,0" />
+        <CheckBox Content="Profiler theme" IsChecked="{Binding UseProfilerTheme}"
+                  ToolTip.Tip="The profiler's own dark colours. Unticked, the system decides. Takes effect the next time the profiler starts." />
+        <Button Content="Cancel" Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}" />
+        <ProgressBar IsIndeterminate="True" Width="120" VerticalAlignment="Center"
+                     IsVisible="{Binding IsBusy}" />
+      </StackPanel>
+    </Border>
+
+    <!-- Status bar -->
+    <Border DockPanel.Dock="Bottom" Padding="8,5" Classes="panel" BorderThickness="0,1,0,0">
+      <TextBlock Text="{Binding Status}" TextTrimming="CharacterEllipsis" />
+    </Border>
+
+    <!-- Snapshot description -->
+    <StackPanel DockPanel.Dock="Top" Margin="8,6,8,2">
+      <TextBlock Classes="meta" Text="{Binding SnapshotDescription}" />
+      <TextBlock Classes="meta" Text="{Binding BaselineDescription}" />
+      <TextBlock Classes="warning" TextWrapping="Wrap" IsVisible="{Binding IsTruncated}"
+                 Text="This dump hit the ten million object limit of the gcdump collector: part of the heap is missing, and a holder living in the missing part is not reported. Collect a full dump (Live processes, Full dumps) to see all of it." />
+    </StackPanel>
+
+    <TabControl Margin="4" SelectedIndex="{Binding SelectedTabIndex}">
+
+      <!-- Explore: what to look at, and what holds it, side by side -->
+      <!-- One grid for the whole view rather than nested panels: a row of a grid has the same
+           height in every column, which is what keeps the three tables starting on the same line. -->
+      <TabItem Header="Explore">
+        <Grid ColumnDefinitions="440,6,*,6,360" RowDefinitions="Auto,Auto,*,6,190" Margin="4">
+
+          <!-- what to look at -->
+          <StackPanel Grid.Row="0" Grid.Column="0" Spacing="6" Margin="0,0,0,6">
+            <TextBox Text="{Binding TypeFilter}" Watermark="filter the types by name" />
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Button Content="Pooled buffers" Command="{Binding AnalyzePoolBlocksCommand}"
+                      ToolTip.Tip="The 2 MB buffers a pool lends out, selected by their size" />
+              <Button Content="Large objects" Command="{Binding AnalyzeLargeObjectsCommand}"
+                      ToolTip.Tip="Everything on the large object heap, 85 KB and above" />
+            </StackPanel>
+          </StackPanel>
+
+          <!-- what is being answered -->
+          <StackPanel Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="3" Spacing="2" Margin="0,0,0,6">
+            <TextBlock Classes="header" Margin="0,0,0,2" Text="{Binding SelectionDescription}" />
+            <TextBlock Classes="meta" Text="{Binding HolderSummary}" TextWrapping="Wrap" />
+          </StackPanel>
+
+          <TextBlock Grid.Row="1" Grid.Column="0" Classes="header" Margin="0,0,0,4" Text="Types" />
+          <TextBlock Grid.Row="1" Grid.Column="2" Classes="header" Margin="0,0,0,4" Text="Paths to a root" />
+          <TextBlock Grid.Row="1" Grid.Column="4" Classes="header" Margin="0,0,0,4" Text="Direct referrers" />
+
+          <DataGrid Grid.Row="2" Grid.RowSpan="3" Grid.Column="0"
+                    ItemsSource="{Binding Types}"
+                    SelectedItem="{Binding SelectedType}"
+                    IsReadOnly="True"
+                    CanUserSortColumns="True"
+                    GridLinesVisibility="Horizontal">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Type" Binding="{Binding TypeName}" Width="*" />
+              <DataGridTextColumn Header="Objects" Binding="{Binding Count}" Width="95" />
+              <DataGridTextColumn Header="Size" Binding="{Binding TotalDisplay}" Width="90" />
+            </DataGrid.Columns>
+          </DataGrid>
+
+          <DataGrid Grid.Row="2" Grid.Column="2"
+                    ItemsSource="{Binding RootPaths}"
+                    SelectedItem="{Binding SelectedRootPath}"
+                    IsReadOnly="True"
+                    CanUserSortColumns="True"
+                    GridLinesVisibility="Horizontal">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Held by" Binding="{Binding HeldBy}" Width="*" />
+              <DataGridTextColumn Header="Objects" Binding="{Binding ObjectCount}" Width="90" />
+              <DataGridTextColumn Header="Size" Binding="{Binding BytesDisplay}" Width="90" />
+              <DataGridTemplateColumn Header="Verdict" Width="150">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding CategoryDisplay}" Margin="12,0,0,0"
+                               VerticalAlignment="Center"
+                               Classes.suspect="{Binding IsSuspect}"
+                               Classes.expected="{Binding !IsSuspect}" />
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+            </DataGrid.Columns>
+          </DataGrid>
+
+          <DataGrid Grid.Row="2" Grid.Column="4"
+                    ItemsSource="{Binding DirectReferrers}"
+                    IsReadOnly="True"
+                    CanUserSortColumns="True"
+                    GridLinesVisibility="Horizontal">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Type" Binding="{Binding TypeName}" Width="*" />
+              <DataGridTextColumn Header="Refs" Binding="{Binding ReferenceCount}" Width="70" />
+            </DataGrid.Columns>
+          </DataGrid>
+
+          <!-- the path of whichever holder is selected -->
+          <Border Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="3"
+                  Classes="panel" BorderThickness="1" Padding="8">
+            <DockPanel LastChildFill="True">
+              <TextBlock DockPanel.Dock="Top" Classes="meta"
+                         Text="{Binding SelectedRootPath.Explanation}"
+                         IsVisible="{Binding SelectedRootPath.Explanation, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              <ScrollViewer>
+                <SelectableTextBlock FontFamily="Cascadia Mono,Consolas,monospace" FontSize="11"
+                                     Text="{Binding SelectedRootPath.PathText}" />
+              </ScrollViewer>
+            </DockPanel>
+          </Border>
+
+          <!-- the widths and the height are the reader's to choose -->
+          <GridSplitter Grid.Row="0" Grid.RowSpan="5" Grid.Column="1"
+                        ResizeDirection="Columns" Background="Transparent"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+
+          <GridSplitter Grid.Row="1" Grid.RowSpan="4" Grid.Column="3"
+                        ResizeDirection="Columns" Background="Transparent"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+
+          <GridSplitter Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="3"
+                        ResizeDirection="Rows" Background="Transparent"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+        </Grid>
+      </TabItem>
+
+      <!-- Probable leaks -->
+      <TabItem Header="Probable leaks">
+        <DockPanel LastChildFill="True">
+          <StackPanel DockPanel.Dock="Top" Margin="4,4,4,8" Spacing="4">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Content="Find leaks" Command="{Binding FindLeaksCommand}" />
+              <Button Content="Show in Explore" Command="{Binding InspectLeakCommand}" />
+              <TextBlock Classes="meta" VerticalAlignment="Center" Text="{Binding LeakSummary}"
+                         TextWrapping="Wrap" />
+            </StackPanel>
+            <TextBlock Classes="meta" TextWrapping="Wrap"
+                       Text="Ranked on two kinds of evidence: what grows across a series of dumps, and what one place in the application is keeping alive. Read the reasons before believing the order." />
+          </StackPanel>
+
+          <Grid ColumnDefinitions="*,8,520">
+            <DataGrid Grid.Column="0" ItemsSource="{Binding Leaks}" SelectedItem="{Binding SelectedLeak}"
+                      IsReadOnly="True" CanUserSortColumns="True" GridLinesVisibility="Horizontal">
+              <DataGrid.Columns>
+                <DataGridTemplateColumn Header="Verdict" Width="90">
+                  <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding Verdict}" Margin="12,0,0,0" VerticalAlignment="Center"
+                                 Classes.suspect="{Binding IsLikely}"
+                                 Classes.warning="{Binding IsPossible}" />
+                    </DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Score" Binding="{Binding ConfidenceDisplay}" Width="70" />
+                <DataGridTextColumn Header="Type" Binding="{Binding TypeName}" Width="2*" />
+                <DataGridTextColumn Header="Held by" Binding="{Binding HeldBy}" Width="2*" />
+                <DataGridTextColumn Header="Size" Binding="{Binding SizeDisplay}" Width="90" />
+                <DataGridTextColumn Header="Objects" Binding="{Binding CountDisplay}" Width="100" />
+                <DataGridTextColumn Header="Growth" Binding="{Binding RateDisplay}" Width="100" />
+              </DataGrid.Columns>
+            </DataGrid>
+
+            <DockPanel Grid.Column="2" LastChildFill="True">
+              <TextBlock DockPanel.Dock="Top" Classes="header" Text="Why it is suspected" />
+              <Border Classes="panel" BorderThickness="1" Padding="8">
+                <ScrollViewer>
+                  <SelectableTextBlock FontFamily="Cascadia Mono,Consolas,monospace" FontSize="11"
+                                       Text="{Binding SelectedLeak.Explanation}" TextWrapping="Wrap" />
+                </ScrollViewer>
+              </Border>
+            </DockPanel>
+          </Grid>
+        </DockPanel>
+      </TabItem>
+
+      <!-- Compare -->
+      <TabItem Header="Compare">
+        <DockPanel LastChildFill="True">
+          <TextBlock DockPanel.Dock="Top" Classes="meta" Margin="4,4,4,8" TextWrapping="Wrap"
+                     Text="Load a second dump of the same process with &quot;Compare with...&quot;. What grew between the two is what accumulates." />
+          <DataGrid ItemsSource="{Binding Deltas}" IsReadOnly="True" CanUserSortColumns="True"
+                    GridLinesVisibility="Horizontal">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Type" Binding="{Binding TypeName}" Width="*" />
+              <DataGridTextColumn Header="Before" Binding="{Binding BeforeDisplay}" Width="130" />
+              <DataGridTextColumn Header="After" Binding="{Binding AfterDisplay}" Width="130" />
+              <DataGridTextColumn Header="Delta objects" Binding="{Binding DeltaCount}" Width="130" />
+              <DataGridTextColumn Header="Delta size" Binding="{Binding DeltaBytesDisplay}" Width="150" />
+            </DataGrid.Columns>
+          </DataGrid>
+        </DockPanel>
+      </TabItem>
+
+      <!-- Live -->
+      <TabItem Header="Live processes">
+        <DockPanel LastChildFill="True">
+          <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="4,4,4,8">
+
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="Dumps are stored in" VerticalAlignment="Center" />
+              <TextBox Width="520" Text="{Binding DumpRootFolder}" />
+              <Button Content="Browse..." Command="{Binding ChangeDumpFolderCommand}" />
+              <TextBlock Classes="meta" VerticalAlignment="Center" Text="one folder per process name" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="Filter" VerticalAlignment="Center" />
+              <TextBox Width="260" Text="{Binding ProcessFilter}" Watermark="name or id" />
+              <TextBlock Classes="meta" VerticalAlignment="Center" Text="{Binding ProcessCount}" />
+              <Button Content="Refresh now" Command="{Binding RefreshProcessesCommand}" />
+              <Button Content="Collect and open" Command="{Binding CollectCommand}" />
+              <CheckBox Content="Full dumps" IsChecked="{Binding UseFullDumps}"
+                        ToolTip.Tip="Full process dumps instead of gcdumps: no 10 million object cap and field precise holders, but files the size of the process memory. Applies to the button and to the schedule." />
+              <Separator Width="1" Margin="4,0" />
+              <TextBlock Text="Every" VerticalAlignment="Center" />
+              <NumericUpDown Width="110" Minimum="1" Maximum="1440" Increment="5"
+                             Value="{Binding IntervalMinutes}" FormatString="0" />
+              <TextBlock Text="minutes, keep at most" VerticalAlignment="Center" />
+              <NumericUpDown Width="110" Minimum="0" Maximum="1000" Increment="1"
+                             Value="{Binding KeepAtMost}" FormatString="0"
+                             ToolTip.Tip="0 keeps every dump" />
+              <Button Content="Start schedule" Command="{Binding StartScheduleCommand}"
+                      IsEnabled="{Binding !IsScheduleRunning}" />
+              <Button Content="Stop" Command="{Binding StopScheduleCommand}"
+                      IsEnabled="{Binding IsScheduleRunning}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Classes="meta" Text="{Binding ScheduleState}" TextWrapping="Wrap" />
+            </StackPanel>
+            <TextBlock Classes="meta" TextWrapping="Wrap"
+                       Text="The list refreshes on its own while this tab is shown. Collecting forces a blocking collection in the target: it pauses for a few seconds, which is why the interval is in minutes. The schedule runs while this window is open." />
+          </StackPanel>
+
+          <Grid ColumnDefinitions="*,8,620">
+            <DataGrid Grid.Column="0"
+                      ItemsSource="{Binding Processes}" SelectedItem="{Binding SelectedProcess}"
+                      IsReadOnly="True" CanUserSortColumns="True" GridLinesVisibility="Horizontal">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Process" Binding="{Binding Name}" Width="*" />
+                <DataGridTextColumn Header="Id" Binding="{Binding ProcessId}" Width="120" />
+              </DataGrid.Columns>
+            </DataGrid>
+
+            <DockPanel Grid.Column="2" LastChildFill="True">
+              <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6">
+                <TextBlock Classes="header" Text="Collection log" />
+                <Button Content="Open file" Command="{Binding OpenLogCommand}" />
+              </StackPanel>
+              <Border Classes="panel" BorderThickness="1">
+                <ListBox ItemsSource="{Binding Activity}" FontFamily="Cascadia Mono,Consolas,monospace"
+                         FontSize="11" SelectionMode="Single">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate>
+                      <SelectableTextBlock Text="{Binding}" TextWrapping="Wrap" />
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+              </Border>
+            </DockPanel>
+          </Grid>
+        </DockPanel>
+      </TabItem>
+
+      <!-- Evolution -->
+      <TabItem Header="Evolution" DataContext="{Binding Evolution}">
+        <DockPanel LastChildFill="True">
+          <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="4,4,4,8">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="Process" VerticalAlignment="Center" />
+              <ComboBox Width="460" ItemsSource="{Binding Sessions}" SelectedItem="{Binding SelectedSession}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding Display}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <Button Content="Load series" Command="{Binding LoadSeriesCommand}" />
+              <Button Content="Open last dump" Command="{Binding OpenLastDumpCommand}" />
+              <CheckBox Content="Plot object counts" IsChecked="{Binding ShowObjectCounts}" />
+              <ProgressBar IsIndeterminate="True" Width="110" VerticalAlignment="Center"
+                           IsVisible="{Binding IsBusy}" />
+            </StackPanel>
+            <TextBlock Classes="meta" Text="{Binding SeriesDescription}" TextWrapping="Wrap" />
+          </StackPanel>
+
+          <Grid RowDefinitions="320,8,*">
+            <Border Grid.Row="0" Classes="panel" BorderThickness="1" Padding="4">
+              <controls:TimeSeriesChart Series="{Binding ChartSeries}" Times="{Binding ChartTimes}"
+                                        ValueUnit="{Binding ValueUnit}" />
+            </Border>
+
+            <Grid Grid.Row="2" ColumnDefinitions="*,8,460">
+              <DockPanel Grid.Column="0" LastChildFill="True">
+                <TextBlock DockPanel.Dock="Top" Classes="header"
+                           Text="What grows across the series (tick to plot)" />
+                <DataGrid ItemsSource="{Binding Trends}" IsReadOnly="False" CanUserSortColumns="True"
+                          GridLinesVisibility="Horizontal">
+                  <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Header="Plot" Binding="{Binding IsPlotted}" Width="70" />
+                    <DataGridTextColumn Header="Type" Binding="{Binding TypeName}" Width="*" IsReadOnly="True" />
+                    <DataGridTextColumn Header="First" Binding="{Binding FirstDisplay}" Width="90" IsReadOnly="True" />
+                    <DataGridTextColumn Header="Last" Binding="{Binding LastDisplay}" Width="90" IsReadOnly="True" />
+                    <DataGridTextColumn Header="Growth" Binding="{Binding GrowthDisplay}" Width="100" IsReadOnly="True" />
+                    <DataGridTextColumn Header="Rate" Binding="{Binding RateDisplay}" Width="110" IsReadOnly="True" />
+                    <DataGridTextColumn Header="Shape" Binding="{Binding ShapeDisplay}" Width="150" IsReadOnly="True" />
+                  </DataGrid.Columns>
+                </DataGrid>
+              </DockPanel>
+
+              <DockPanel Grid.Column="2" LastChildFill="True">
+                <TextBlock DockPanel.Dock="Top" Classes="header" Text="Change between the last two dumps" />
+                <DataGrid ItemsSource="{Binding StepDeltas}" IsReadOnly="True" CanUserSortColumns="True"
+                          GridLinesVisibility="Horizontal">
+                  <DataGrid.Columns>
+                    <DataGridTextColumn Header="Type" Binding="{Binding TypeName}" Width="*" />
+                    <DataGridTextColumn Header="Objects" Binding="{Binding DeltaCount}" Width="90" />
+                    <DataGridTextColumn Header="Size" Binding="{Binding DeltaBytesDisplay}" Width="110" />
+                  </DataGrid.Columns>
+                </DataGrid>
+              </DockPanel>
+            </Grid>
+          </Grid>
+        </DockPanel>
+      </TabItem>
+
+    </TabControl>
+  </DockPanel>
+</Window>

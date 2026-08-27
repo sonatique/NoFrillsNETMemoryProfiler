@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LibFolder>$(MSBuildThisFileDirectory)..\..\lib</LibFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NoFrills.MemoryProfiler.Tests" />
+  </ItemGroup>
+
+  <!--
+    The heap graph reader (Graphs.MemoryGraph, GCHeapDump, RefGraph) and the live collector
+    (EventPipeDotNetHeapDumper) are only published inside the dotnet-gcdump global tool: no NuGet
+    package exposes them. The assemblies are copied next to this solution so a build does not
+    depend on which version of the tool happens to be installed. See lib\README.md.
+  -->
+  <ItemGroup>
+    <Reference Include="dotnet-gcdump">
+      <HintPath>$(LibFolder)\dotnet-gcdump.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Diagnostics.FastSerialization">
+      <HintPath>$(LibFolder)\Microsoft.Diagnostics.FastSerialization.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Diagnostics.Tracing.TraceEvent">
+      <HintPath>$(LibFolder)\Microsoft.Diagnostics.Tracing.TraceEvent.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Diagnostics.NETCore.Client">
+      <HintPath>$(LibFolder)\Microsoft.Diagnostics.NETCore.Client.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="4.0.732401" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,24 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .backdrop { fill: #4FAE7A; }
+      .glyph { fill: #201B18; }
+    </style>
+  </defs>
+
+  <!-- solid backdrop, high contrast against dark titlebars/taskbars -->
+  <rect x="0" y="0" width="400" height="400" rx="88" class="backdrop"/>
+
+  <!-- simplified mole silhouette, no fine detail (whiskers/eye lines dropped) -->
+  <path d="M 122 320
+           C 122 210, 152 130, 200 130
+           C 248 130, 278 210, 278 320
+           Z" class="glyph"/>
+
+  <!-- ears -->
+  <ellipse cx="144" cy="140" rx="20" ry="22" class="glyph"/>
+  <ellipse cx="256" cy="140" rx="20" ry="22" class="glyph"/>
+
+  <!-- snout, single bold shape -->
+  <ellipse cx="200" cy="205" rx="30" ry="20" class="backdrop"/>
+</svg>

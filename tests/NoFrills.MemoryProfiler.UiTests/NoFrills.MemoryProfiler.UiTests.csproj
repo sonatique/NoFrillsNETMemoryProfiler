@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless.NUnit" Version="12.1.0" />
+    <PackageReference Include="Avalonia.Skia" Version="12.1.0" />
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
+    <PackageReference Include="NUnit" Version="4.5.1" />
+    <PackageReference Include="NUnit.Analyzers" Version="4.7.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="NUnit.Framework" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NoFrills.MemoryProfiler.App\NoFrills.MemoryProfiler.App.csproj" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Compile Include="..\Shared\ReferenceDumps.cs" Link="ReferenceDumps.cs" />
+    <Compile Include="..\Shared\ReferenceExpectations.cs" Link="ReferenceExpectations.cs" />
+    <Compile Include="..\Shared\TestTarget.cs" Link="TestTarget.cs" />
+  </ItemGroup>
+
+</Project>

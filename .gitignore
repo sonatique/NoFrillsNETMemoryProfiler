@@ -1,0 +1,6 @@
+bin/
+obj/
+.vs/
+
+# Written next to a dump the first time it is reduced, and rebuilt whenever it is missing.
+*.gcdump.summary.json

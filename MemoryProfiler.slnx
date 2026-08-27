@@ -1,0 +1,12 @@
+﻿<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/NoFrills.MemoryProfiler.App/NoFrills.MemoryProfiler.App.csproj" />
+    <Project Path="src/NoFrills.MemoryProfiler.Core/NoFrills.MemoryProfiler.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <!-- The target the collection tests dump; not referenced, started as a process. -->
+    <Project Path="tests/NoFrills.MemoryProfiler.Sleeper/NoFrills.MemoryProfiler.Sleeper.csproj" />
+    <Project Path="tests/NoFrills.MemoryProfiler.Tests/NoFrills.MemoryProfiler.Tests.csproj" />
+    <Project Path="tests/NoFrills.MemoryProfiler.UiTests/NoFrills.MemoryProfiler.UiTests.csproj" />
+  </Folder>
+</Solution>

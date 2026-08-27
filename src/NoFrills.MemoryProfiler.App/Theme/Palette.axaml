@@ -1,0 +1,132 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!--
+    The profiler's own look: dark earthy neutrals with a single vivid accent. Kept in one file so
+    it can be left out entirely, which is what the setting does when the system look is preferred.
+  -->
+
+  <Styles.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://NoFrills.MemoryProfiler.App/Theme/Theme.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Styles.Resources>
+
+  <Style Selector="Window">
+    <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock">
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="SelectableTextBlock">
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.meta">
+    <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+    <Setter Property="Opacity" Value="1" />
+  </Style>
+
+  <Style Selector="Border.panel">
+    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+  </Style>
+
+  <Style Selector="DataGrid">
+    <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource BorderBrush}" />
+    <Setter Property="VerticalGridLinesBrush" Value="{StaticResource BorderBrush}" />
+  </Style>
+
+  <Style Selector="DataGridColumnHeader">
+    <Setter Property="Background" Value="{StaticResource SurfaceElevatedBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+  </Style>
+
+  <Style Selector="TextBox">
+    <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+  </Style>
+
+  <Style Selector="Button">
+    <Setter Property="Background" Value="{StaticResource SurfaceElevatedBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+  </Style>
+
+  <!-- The accent marks what can be acted on, so it belongs on the hovered and pressed button. -->
+  <Style Selector="Button:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource AccentHoverBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource OnAccentBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource AccentHoverBrush}" />
+  </Style>
+
+  <Style Selector="Button:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource AccentPressedBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource OnAccentBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource AccentPressedBrush}" />
+  </Style>
+
+  <Style Selector="Button:disabled /template/ ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="TabItem">
+    <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="TabItem:selected">
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="ListBox">
+    <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="ComboBox">
+    <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+  </Style>
+
+  <!-- States, never decoration. -->
+  <Style Selector="TextBlock.suspect">
+    <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.expected">
+    <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.warning">
+    <Setter Property="Foreground" Value="{StaticResource WarningBrush}" />
+  </Style>
+
+  <!--
+    The selected row is painted with the accent at six tenths over the surface, so it stays dark
+    and the rest of the row keeps its light text. A state colour on top of that is the one thing
+    that does not read, so on the selection it gives way to the ordinary text colour.
+  -->
+  <Style Selector="DataGridRow:selected TextBlock.suspect">
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="DataGridRow:selected TextBlock.expected">
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="DataGridRow:selected TextBlock.warning">
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+  </Style>
+</Styles>
