@@ -51,6 +51,15 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Where the process list comes from; replaced in tests.</summary>
     public Func<IReadOnlyList<LiveProcess>> ProcessSource { get; set; } = LiveCollector.GetProfilableProcesses;
 
+    /// <summary>
+    /// How "Collect and open" takes a dump into a store, full or not; replaced in tests, which
+    /// collect into a folder of their own rather than the one the settings name.
+    /// </summary>
+    public Func<LiveProcess, DumpStore, bool, IProgress<string>, CancellationToken, string> CollectDump { get; set; } =
+        (process, store, fullDump, progress, token) => fullDump
+            ? FullDumpCollector.Collect(process, store, progress, token)
+            : LiveCollector.Collect(process, store, TimeSpan.FromMinutes(5), progress, token);
+
     /// <summary>True while the list refreshes on its own, which it only does when it is on screen.</summary>
     public bool IsWatchingProcesses => m_processWatch.IsEnabled;
 
@@ -637,22 +646,23 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
+        string? path = null;
+
         await RunAsync(async token =>
         {
             var progress = Progress;
             var store = m_store;
             var fullDump = UseFullDumps;
+            var collect = CollectDump;
 
-            var path = await Task.Run(
-                () => fullDump
-                    ? FullDumpCollector.Collect(process, store, progress, token)
-                    : LiveCollector.Collect(process, store, TimeSpan.FromMinutes(5), progress, token),
-                token);
+            path = await Task.Run(() => collect(process, store, fullDump, progress, token), token);
 
             Evolution.RefreshSessions(store);
-
-            await LoadDumpAsync(path, asBaseline: false);
         });
+
+        // Opened once the collection's RunAsync is over, not inside it: opening runs its own, which
+        // returned at once while the collection still held the busy state, so nothing was opened.
+        if (path != null) await LoadDumpAsync(path, asBaseline: false);
     }
 
     /// <summary>
