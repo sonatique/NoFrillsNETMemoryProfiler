@@ -10,8 +10,8 @@ Copied from `dotnet-gcdump` 9.0.661903 (MIT licensed, part of dotnet/diagnostics
 |---|---|
 | `dotnet-gcdump.dll` | `Graphs.MemoryGraph`, `GCHeapDump`, `RefGraph`, `EventPipeDotNetHeapDumper` |
 | `Microsoft.Diagnostics.FastSerialization.dll` | reading the serialized graph |
-| `Microsoft.Diagnostics.Tracing.TraceEvent.dll` | event parsing used by the collector |
-| `Microsoft.Diagnostics.NETCore.Client.dll` | listing and contacting live processes |
+| `Microsoft.Diagnostics.Tracing.TraceEvent.dll` | event parsing used by the collector, reading GC timeline recordings |
+| `Microsoft.Diagnostics.NETCore.Client.dll` | listing and contacting live processes, recording their GC events |
 | `Dia2Lib.dll`, `TraceReloggerLib.dll` | dependencies of TraceEvent |
 
 ## Refreshing them

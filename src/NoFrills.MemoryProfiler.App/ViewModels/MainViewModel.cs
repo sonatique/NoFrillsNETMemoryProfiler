@@ -45,6 +45,9 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Index of the tab ranking what is most likely to be leaking.</summary>
     public const int LeakTabIndex = 1;
 
+    /// <summary>Index of the tab showing a recording of the garbage collector.</summary>
+    public const int GcTimelineTabIndex = 5;
+
     /// <summary>Where the process list comes from; replaced in tests.</summary>
     public Func<IReadOnlyList<LiveProcess>> ProcessSource { get; set; } = LiveCollector.GetProfilableProcesses;
 
@@ -86,6 +89,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     public EvolutionViewModel Evolution { get; } = new();
 
+    public GcTimelineViewModel Timeline { get; } = new();
+
     [ObservableProperty] private string m_status = "Open a .gcdump file, or collect one from a running process.";
     [ObservableProperty] private string m_snapshotDescription = "No dump loaded";
     [ObservableProperty] private string m_baselineDescription = "No comparison loaded";
@@ -122,6 +127,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool m_useProfilerTheme = true;
     [ObservableProperty] private string m_leakSummary = "Open a dump, then look for leaks.";
     [ObservableProperty] private LeakRow? m_selectedLeak;
+    [ObservableProperty] private int m_recordSeconds = 10;
 
     public string DumpRootFolder
     {
@@ -153,6 +159,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>Set by the view, which owns the file dialogs.</summary>
     public Func<bool, Task<string?>>? PickDumpFile { get; set; }
+    public Func<Task<string?>>? PickTraceFile { get; set; }
     public Func<string, Task<string?>>? PickSaveFile { get; set; }
 
     private IProgress<string> Progress => new Progress<string>(message => Status = message);
@@ -646,6 +653,79 @@ public sealed partial class MainViewModel : ObservableObject
 
             await LoadDumpAsync(path, asBaseline: false);
         });
+    }
+
+    /// <summary>
+    /// Reads the recording once its <see cref="RunAsync"/> is over, not inside it: reading runs its
+    /// own, which would return at once while the recording still holds the busy state.
+    /// </summary>
+    [RelayCommand]
+    private async Task RecordGcTimelineAsync()
+    {
+        var process = SelectedProcess;
+        if (process == null)
+        {
+            Status = "Select a process first.";
+            return;
+        }
+
+        string? path = null;
+
+        // Cancel ends the recording early; what was recorded is still read.
+        await RunAsync(async token =>
+        {
+            var progress = Progress;
+            var store = m_store;
+            var duration = TimeSpan.FromSeconds(RecordSeconds);
+
+            path = await Task.Run(() => GcTimelineCollector.Record(process, store, duration, progress, token), CancellationToken.None);
+        });
+
+        if (path != null) await LoadTraceAsync(path);
+    }
+
+    [RelayCommand]
+    private async Task OpenTraceAsync()
+    {
+        if (PickTraceFile == null) return;
+
+        var path = await PickTraceFile();
+        if (path != null) await LoadTraceAsync(path);
+    }
+
+    public async Task LoadTraceAsync(string path)
+    {
+        await RunAsync(async token =>
+        {
+            var progress = Progress;
+            var timeline = await Task.Run(() => GcTimeline.Load(path, progress), token);
+
+            Timeline.Show(timeline);
+            SelectedTabIndex = GcTimelineTabIndex;
+
+            Status = Timeline.Description;
+        });
+    }
+
+    [RelayCommand]
+    private async Task ExportGcReportAsync()
+    {
+        var timeline = Timeline.Loaded;
+
+        if (timeline == null)
+        {
+            Status = "Record a process or open a recording first.";
+            return;
+        }
+
+        if (PickSaveFile == null) return;
+
+        var path = await PickSaveFile(System.IO.Path.GetFileNameWithoutExtension(timeline.FilePath) + "-gc.md");
+        if (path == null) return;
+
+        await System.IO.File.WriteAllTextAsync(path, ReportWriter.Write(timeline));
+
+        Status = $"Report written to {path}";
     }
 
     [RelayCommand]

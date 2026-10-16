@@ -17,6 +17,7 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         m_model.PickDumpFile = PickDumpFile;
+        m_model.PickTraceFile = PickTraceFile;
         m_model.PickSaveFile = PickSaveFile;
         m_model.PickFolder = PickFolder;
         DataContext = m_model;
@@ -36,6 +37,22 @@ public partial class MainWindow : Window
             FileTypeFilter = new List<FilePickerFileType>
             {
                 new("Heap dumps") { Patterns = new[] { "*.gcdump", "*.dmp" } },
+                new("All files") { Patterns = new[] { "*" } }
+            }
+        });
+
+        return files.FirstOrDefault()?.TryGetLocalPath();
+    }
+
+    private async Task<string?> PickTraceFile()
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Open a GC recording",
+            AllowMultiple = false,
+            FileTypeFilter = new List<FilePickerFileType>
+            {
+                new("GC recordings") { Patterns = new[] { "*.nettrace" } },
                 new("All files") { Patterns = new[] { "*" } }
             }
         });

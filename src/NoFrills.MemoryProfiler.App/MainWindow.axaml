@@ -256,6 +256,16 @@
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="Record the garbage collector for" VerticalAlignment="Center" />
+              <NumericUpDown Width="110" Minimum="1" Maximum="3600" Increment="5"
+                             Value="{Binding RecordSeconds}" FormatString="0" />
+              <TextBlock Text="seconds" VerticalAlignment="Center" />
+              <Button Content="Record GC timeline" Command="{Binding RecordGcTimelineCommand}" />
+              <TextBlock Classes="meta" VerticalAlignment="Center"
+                         Text="what triggers the collections and how long they stop the threads; does not pause the process" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="6">
               <TextBlock Classes="meta" Text="{Binding ScheduleState}" TextWrapping="Wrap" />
             </StackPanel>
             <TextBlock Classes="meta" TextWrapping="Wrap"
@@ -346,6 +356,97 @@
                     <DataGridTextColumn Header="Type" Binding="{Binding TypeName}" Width="*" />
                     <DataGridTextColumn Header="Objects" Binding="{Binding DeltaCount}" Width="90" />
                     <DataGridTextColumn Header="Size" Binding="{Binding DeltaBytesDisplay}" Width="110" />
+                  </DataGrid.Columns>
+                </DataGrid>
+              </DockPanel>
+            </Grid>
+          </Grid>
+        </DockPanel>
+      </TabItem>
+
+      <!-- GC timeline: what a heap snapshot cannot say, when the threads stood still and why -->
+      <TabItem Header="GC timeline">
+        <DockPanel LastChildFill="True">
+          <StackPanel DockPanel.Dock="Top" Margin="4,4,4,8" Spacing="4">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Content="Open recording..." Command="{Binding OpenTraceCommand}" />
+              <Button Content="Export report..." Command="{Binding ExportGcReportCommand}" />
+              <TextBlock Classes="meta" VerticalAlignment="Center" Text="{Binding Timeline.Description}"
+                         TextWrapping="Wrap" />
+            </StackPanel>
+            <TextBlock Classes="meta" TextWrapping="Wrap"
+                       Text="Record from the Live processes tab; recordings are kept beside the dumps. A pause runs from the runtime asking the threads to stop to their running again. Allocations are sampled about every 100 KB and charged to the object that crossed the mark: read them as proportions." />
+          </StackPanel>
+
+          <Grid DataContext="{Binding Timeline}" RowDefinitions="200,8,220,8,*">
+            <Border Grid.Row="0" Classes="panel" BorderThickness="1" Padding="4">
+              <controls:PauseTimelineChart Bars="{Binding Bars}" DurationMs="{Binding DurationMs}" />
+            </Border>
+
+            <Grid Grid.Row="2" ColumnDefinitions="3*,8,2*">
+              <DockPanel Grid.Column="0" LastChildFill="True">
+                <TextBlock DockPanel.Dock="Top" Classes="header" Text="Pauses by generation" />
+                <DataGrid ItemsSource="{Binding Generations}" IsReadOnly="True" CanUserSortColumns="True"
+                          GridLinesVisibility="Horizontal">
+                  <DataGrid.Columns>
+                    <DataGridTextColumn Header="Generation" Binding="{Binding Generation}" Width="150" />
+                    <DataGridTextColumn Header="Pauses" Binding="{Binding Count}" Width="80" />
+                    <DataGridTextColumn Header="Total ms" Binding="{Binding TotalMs, StringFormat={}{0:F1}}" Width="100" />
+                    <DataGridTextColumn Header="p50 ms" Binding="{Binding P50Ms, StringFormat={}{0:F2}}" Width="95" />
+                    <DataGridTextColumn Header="p95 ms" Binding="{Binding P95Ms, StringFormat={}{0:F2}}" Width="95" />
+                    <DataGridTextColumn Header="Max ms" Binding="{Binding MaxMs, StringFormat={}{0:F2}}" Width="95" />
+                    <DataGridTextColumn Header="Triggered by" Binding="{Binding TriggeredBy}" Width="*" />
+                  </DataGrid.Columns>
+                </DataGrid>
+              </DockPanel>
+
+              <DockPanel Grid.Column="2" LastChildFill="True">
+                <TextBlock DockPanel.Dock="Top" Classes="header" Text="Pauses" />
+                <DataGrid ItemsSource="{Binding Pauses}" IsReadOnly="True" CanUserSortColumns="True"
+                          GridLinesVisibility="Horizontal">
+                  <DataGrid.Columns>
+                    <DataGridTextColumn Header="At ms" Binding="{Binding StartMs, StringFormat={}{0:F1}}" Width="100" />
+                    <DataGridTextColumn Header="Pause ms" Binding="{Binding DurationMs, StringFormat={}{0:F2}}" Width="105" />
+                    <DataGridTextColumn Header="Generation" Binding="{Binding Generation}" Width="150" />
+                    <DataGridTextColumn Header="Trigger" Binding="{Binding Gc.Reason}" Width="*" />
+                    <DataGridTextColumn Header="GC" Binding="{Binding Gc.Number}" Width="70" />
+                  </DataGrid.Columns>
+                </DataGrid>
+              </DockPanel>
+            </Grid>
+
+            <Grid Grid.Row="4" ColumnDefinitions="*,8,260,8,1.4*">
+              <DockPanel Grid.Column="0" LastChildFill="True">
+                <TextBlock DockPanel.Dock="Top" Classes="header" Text="Allocated, by type" />
+                <DataGrid ItemsSource="{Binding ByType}" IsReadOnly="True" CanUserSortColumns="True"
+                          GridLinesVisibility="Horizontal">
+                  <DataGrid.Columns>
+                    <DataGridTextColumn Header="Type" Binding="{Binding Name}" Width="*" />
+                    <DataGridTextColumn Header="Size" Binding="{Binding BytesDisplay}" SortMemberPath="Bytes" Width="90" />
+                    <DataGridTextColumn Header="Share" Binding="{Binding ShareDisplay}" SortMemberPath="Bytes" Width="80" />
+                  </DataGrid.Columns>
+                </DataGrid>
+              </DockPanel>
+
+              <DockPanel Grid.Column="2" LastChildFill="True">
+                <TextBlock DockPanel.Dock="Top" Classes="header" Text="by thread" />
+                <DataGrid ItemsSource="{Binding ByThread}" IsReadOnly="True" CanUserSortColumns="True"
+                          GridLinesVisibility="Horizontal">
+                  <DataGrid.Columns>
+                    <DataGridTextColumn Header="Thread" Binding="{Binding Name}" Width="*" />
+                    <DataGridTextColumn Header="Size" Binding="{Binding BytesDisplay}" SortMemberPath="Bytes" Width="90" />
+                  </DataGrid.Columns>
+                </DataGrid>
+              </DockPanel>
+
+              <DockPanel Grid.Column="4" LastChildFill="True">
+                <TextBlock DockPanel.Dock="Top" Classes="header" Text="by stack (first application frames)" />
+                <DataGrid ItemsSource="{Binding ByStack}" IsReadOnly="True" CanUserSortColumns="True"
+                          GridLinesVisibility="Horizontal">
+                  <DataGrid.Columns>
+                    <DataGridTextColumn Header="Stack" Binding="{Binding Name}" Width="*" />
+                    <DataGridTextColumn Header="Size" Binding="{Binding BytesDisplay}" SortMemberPath="Bytes" Width="90" />
+                    <DataGridTextColumn Header="Share" Binding="{Binding ShareDisplay}" SortMemberPath="Bytes" Width="80" />
                   </DataGrid.Columns>
                 </DataGrid>
               </DockPanel>

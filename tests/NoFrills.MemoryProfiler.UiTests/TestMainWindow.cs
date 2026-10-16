@@ -46,7 +46,7 @@ public sealed class TestMainWindow
         var tabs = window.GetVisualDescendants().OfType<TabItem>().ToList();
 
         Assert.That(tabs.Select(tab => tab.Header?.ToString()), Is.EquivalentTo(
-            new[] { "Explore", "Probable leaks", "Compare", "Live processes", "Evolution" }));
+            new[] { "Explore", "Probable leaks", "Compare", "Live processes", "Evolution", "GC timeline" }));
     }
 
     [AvaloniaTest]

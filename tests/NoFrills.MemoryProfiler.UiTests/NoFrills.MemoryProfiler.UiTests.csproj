@@ -33,4 +33,9 @@
     <Compile Include="..\Shared\TestTarget.cs" Link="TestTarget.cs" />
   </ItemGroup>
 
+  <!-- The recording the core tests read, opened here by TestGcTimelineTab. -->
+  <ItemGroup>
+    <None Include="..\NoFrills.MemoryProfiler.Tests\Fixtures\**" Link="Fixtures\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

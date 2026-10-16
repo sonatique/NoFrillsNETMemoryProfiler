@@ -97,6 +97,15 @@ dotnet run --project src/NoFrills.MemoryProfiler.App
    worth more with a series loaded in Evolution, because growth is evidence a single dump cannot
    give. **Show in Explore** opens the suspect with its holders already showing.
 8. **Export report...** writes the analysis as markdown, to paste into an issue.
+9. **Record GC timeline** (Live processes) answers what no dump can: what triggers the collections
+   and how long they stop the threads. It listens to the garbage collector of the selected process
+   for the chosen number of seconds, without pausing it, and files the recording (`.nettrace`)
+   beside the dumps; **Open recording...** reads one again. The **GC timeline** tab plots every
+   pause against time, sums the pauses up per generation (count, total, p50, p95, max, and what
+   triggered them), and ranks what allocated by type, by thread and by stack. A stack is cut to its
+   first frames outside the framework: the framework frames say how memory is allocated, which is
+   always the same, the ones above them say why. The allocations are samples, one about every
+   100 KB, so read them as proportions. Its own **Export report...** writes it as markdown.
 
 ![the probable leaks view](doc/probable-leaks.png)
 
@@ -172,7 +181,7 @@ dump being analyzed in the holder view is ever fully in memory.
 | `src/NoFrills.MemoryProfiler.App` | Avalonia desktop application. |
 | `tests/NoFrills.MemoryProfiler.Tests` | Analysis tests, run against a reference dump. |
 | `tests/NoFrills.MemoryProfiler.UiTests` | Headless tests that build the real window, and render it to a picture. |
-| `tests/NoFrills.MemoryProfiler.Sleeper` | A target process for the tests: allocates, builds a leaking collection and a healthy one, then waits. |
+| `tests/NoFrills.MemoryProfiler.Sleeper` | A target process for the tests: allocates, builds a leaking collection and a healthy one, then waits. Started with `allocate`, it churns garbage and induces collections instead, for the GC timeline; `tests/NoFrills.MemoryProfiler.Tests/Fixtures/allocating-sleeper.nettrace` is a recording of it. |
 
 The collection tests start a real process, collect from it on a schedule and read the result back,
 so the whole chain is covered rather than mocked.
