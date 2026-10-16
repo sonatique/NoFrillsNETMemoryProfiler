@@ -3,6 +3,24 @@
 // It also builds the two halves of the stale slot check: a queue that clears the slot it removes
 // from, and one that only moves its index. Both look the same from outside and hold the same
 // number of items; only the second still refers to what it removed.
+//
+// Started with "allocate" it is the target of the GC timeline tests instead: see Allocator.
+if (args is ["allocate"])
+{
+    // The runtime only collects gen2 in the background once it holds something worth it.
+    var ballast = Enumerable.Range(0, 2000).Select(_ => new byte[10_000]).ToList();
+    GC.Collect();
+    GC.Collect();
+
+    Console.WriteLine($"ready {Environment.ProcessId}");
+    Console.Out.Flush();
+
+    Allocator.Run(TimeSpan.FromMinutes(2));
+
+    GC.KeepAlive(ballast);
+    return;
+}
+
 var kept = new List<byte[]>();
 for (var i = 0; i < 20; ++i) kept.Add(new byte[2_097_152]);
 
@@ -39,6 +57,52 @@ Thread.Sleep(TimeSpan.FromMinutes(2));
 GC.KeepAlive(kept);
 GC.KeepAlive(tidy);
 GC.KeepAlive(leaky);
+
+// Garbage of two recognizable kinds made by one named method on a thread of its own, and a
+// collection induced every 100 ms on the main thread: known allocations to group and known pauses
+// to pair. The rate is held to about 15 MB/s so a recording of it stays small enough to keep.
+static class Allocator
+{
+    public static void Run(TimeSpan duration)
+    {
+        var end = DateTime.UtcNow + duration;
+
+        new Thread(() => Churn(end)) { IsBackground = true }.Start();
+
+        for (var round = 1; DateTime.UtcNow < end; ++round)
+        {
+            Thread.Sleep(100);
+
+            // Every fifth one is a background gen2 instead, which stops the threads twice.
+            if (round % 5 == 0) GC.Collect(2, GCCollectionMode.Forced, blocking: false);
+            else GC.Collect(1, GCCollectionMode.Forced, blocking: true);
+        }
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static void Churn(DateTime end)
+    {
+        var recent = new object[256];
+        var next = 0;
+
+        while (DateTime.UtcNow < end)
+        {
+            for (var i = 0; i < 200; ++i)
+            {
+                recent[next++ & 255] = new byte[1000];
+                recent[next++ & 255] = new Garbage();
+                recent[next++ & 255] = new Garbage();
+            }
+
+            Thread.Sleep(10);
+        }
+    }
+}
+
+public sealed class Garbage
+{
+    public long A, B, C, D, E, F, G, H;
+}
 
 sealed class Payload(int number)
 {

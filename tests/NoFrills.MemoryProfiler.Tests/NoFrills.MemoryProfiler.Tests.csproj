@@ -39,4 +39,9 @@
     <Compile Include="..\Shared\TestTarget.cs" Link="TestTarget.cs" />
   </ItemGroup>
 
+  <!-- A recording of the sleeper started with "allocate", read by TestGcTimeline. -->
+  <ItemGroup>
+    <None Include="Fixtures\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

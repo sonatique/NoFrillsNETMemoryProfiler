@@ -11,7 +11,7 @@ namespace NoFrills.MemoryProfiler.Tests;
 [TestFixture]
 public sealed class TestLiveCollection
 {
-    private static string SleeperDirectory => Path.GetFullPath(Path.Combine(
+    internal static string SleeperDirectory => Path.GetFullPath(Path.Combine(
         TestContext.CurrentContext.TestDirectory, "..", "..", "..", "..", "NoFrills.MemoryProfiler.Sleeper"));
 
     [Test]
@@ -81,9 +81,9 @@ public sealed class TestLiveCollection
         }
     }
 
-    private static Process StartSleeper()
+    internal static Process StartSleeper(string arguments = "")
     {
-        var process = Process.Start(new ProcessStartInfo("dotnet", "run --project .")
+        var process = Process.Start(new ProcessStartInfo("dotnet", $"run --project . -- {arguments}")
         {
             WorkingDirectory = SleeperDirectory,
             RedirectStandardOutput = true,
